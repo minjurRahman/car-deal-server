@@ -23,6 +23,7 @@ async function run(){
     const categoryCollection = client.db('CarDeal').collection('category');
     const carsCollection = client.db('CarDeal').collection('cars');
     const bookingsCollection = client.db('CarDeal').collection('bookings');
+    const usersCollection = client.db('CarDeal').collection('users');
 
     //Category 
     app.get('/category', async(req, res) =>{
@@ -47,11 +48,12 @@ async function run(){
       const query = category.categoryId ;
       console.log(query)
 
-      const display = await carsCollection.find( n => n.query === id);
+      const display = await carsCollection.find(query).toArray();
       console.log(display)
       res.send(display);
     })
-    
+
+    //get specific categories data
     app.get('/category/:categoryId', async (req, res) => {
       const categoryId = req.params.categoryId;
       const query = { categoryId: parseInt(categoryId) }
@@ -74,6 +76,14 @@ async function run(){
       const query = { email: email };
       const bookings = await bookingsCollection.find(query).toArray();
       res.send(bookings);
+    })
+
+
+    //Users
+    app.post('/users', async(req, res) =>{
+      const user = req.body;
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
     })
 
 
