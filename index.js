@@ -21,12 +21,52 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run(){
   try{
     const categoryCollection = client.db('CarDeal').collection('category');
+    const carsCollection = client.db('CarDeal').collection('cars');
+    const bookingsCollection = client.db('CarDeal').collection('bookings');
 
+    //Category 
     app.get('/category', async(req, res) =>{
       const query = {};
       const options = await categoryCollection.find(query).toArray();
       res.send(options);
     })
+
+    //Cars
+    app.get('/cars', async(req, res) =>{
+      const query = {};
+      const options = await carsCollection.find(query).toArray();
+      res.send(options);
+    })
+
+    //get specific categories data
+    app.get('/cars/:id', async (req, res) =>{
+      const id = req.params.id;
+      console.log(id)
+      const category = req.body;
+
+      const query = category.categoryId ;
+      console.log(query)
+
+      const display = await carsCollection.find( n => n.query === id);
+      console.log(display)
+      res.send(display);
+    })
+
+
+    //Bookings collection 
+    app.post('/bookings', async(req, res) =>{
+      const booking = req.body;
+      const result = await bookingsCollection.insertOne(booking);
+      res.send(result);
+    })
+
+    app.get('/bookings', async(req, res) =>{
+      const email = req.query.email;
+      const query = { email: email };
+      const bookings = await bookingsCollection.find(query).toArray();
+      res.send(bookings);
+    })
+
 
   }
   catch(error){
