@@ -51,6 +51,14 @@ async function run(){
       console.log(display)
       res.send(display);
     })
+    
+    app.get('/category/:categoryId', async (req, res) => {
+      const categoryId = req.params.categoryId;
+      const query = { categoryId: parseInt(categoryId) }
+      const result = await carsCollection.find(query).toArray()
+      res.send(result);
+      console.log(req.params.id);
+  })
 
 
     //Bookings collection 
@@ -62,6 +70,7 @@ async function run(){
 
     app.get('/bookings', async(req, res) =>{
       const email = req.query.email;
+      console.log(email)
       const query = { email: email };
       const bookings = await bookingsCollection.find(query).toArray();
       res.send(bookings);
