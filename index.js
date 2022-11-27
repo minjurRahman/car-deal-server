@@ -43,6 +43,7 @@ async function run(){
     const carsCollection = client.db('CarDeal').collection('cars');
     const bookingsCollection = client.db('CarDeal').collection('bookings');
     const usersCollection = client.db('CarDeal').collection('users');
+    const sellersCarCollection = client.db('CarDeal').collection('sellersCar');
 
     //Category 
     app.get('/category', async(req, res) =>{
@@ -70,14 +71,14 @@ async function run(){
     //get specific categories data
     app.get('/category/:categoryId', async (req, res) => {
       const categoryId = req.params.categoryId;
-      const query = { categoryId: parseInt(categoryId) }
+      const query = { categoryId: categoryId }
       const result = await carsCollection.find(query).toArray()
       res.send(result);
       console.log(req.params.id);
   })
 
   //post cars by seller
-  app.post('/cars', verifyJWT, verifyAdmin, async(req, res) =>{
+  app.post('/cars', verifyJWT, async(req, res) =>{
     const cars = req.body;
     const result = await carsCollection.insertOne(cars);
     res.send(result);
@@ -93,7 +94,6 @@ async function run(){
 
     app.get('/bookings', async(req, res) =>{
       const email = req.query.email;
-      console.log(email)
       const query = { BuyerEmail: email };
       const bookings = await bookingsCollection.find(query).toArray();
       res.send(bookings);
@@ -140,6 +140,20 @@ async function run(){
       const query = { email: email }
       const user = await usersCollection.findOne(query);
       res.send({isAdmin: user?.role === 'admin'});
+    })
+
+    //Sellers Car
+    app.post('/sellersCar', verifyJWT, async(req, res) =>{
+      const cars = req.body;
+      const result = await sellersCarCollection.insertOne(cars);
+      res.send(result);
+    })
+
+    app.get('/sellersCar', async(req, res) =>{
+      const email = req.query.email;
+      const query = { email: email };
+      const sellers = await sellersCarCollection.find(query).toArray();
+      res.send(sellers);
     })
 
 
