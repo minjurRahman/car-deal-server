@@ -24,9 +24,7 @@ function verifyJWT(req, res, next){
   if(!authHeader){
     return res.status(401).send('Unauthorized Access');
   }
-
   const token = authHeader.split(' ')[1];
-
   jwt.verify(token, process.env.ACCESS_TOKEN, function(err, decoded){
     if(err){
       return res.status(403).send({message: 'Forbidden Access'})
@@ -105,6 +103,12 @@ async function run(){
       const user = req.body;
       const result = await usersCollection.insertOne(user);
       res.send(result);
+    }) 
+
+    app.get('/users', async(req, res) =>{
+      const query = {};
+      const users = await usersCollection.find(query).toArray()
+      res.send(users);
     })
 
 
