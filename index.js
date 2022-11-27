@@ -59,17 +59,12 @@ async function run(){
     })
 
     //get specific categories data
-    app.get('/cars/:id', async (req, res) =>{
-      const id = req.params.id;
-      console.log(id)
-      const category = req.body;
-
-      const query = category.categoryId ;
-      console.log(query)
-
-      const display = await carsCollection.find(query).toArray();
-      console.log(display)
-      res.send(display);
+    app.get('/cars/:categoryName', async (req, res) =>{
+      const categoryId = req.params.categoryName;
+      const query = { categoryName }
+      const result = await carsCollection.find(query).toArray()
+      res.send(result);
+      console.log(req.params.id);
     })
 
     //get specific categories data
@@ -79,6 +74,13 @@ async function run(){
       const result = await carsCollection.find(query).toArray()
       res.send(result);
       console.log(req.params.id);
+  })
+
+  //post cars by seller
+  app.post('/cars', verifyJWT, verifyAdmin, async(req, res) =>{
+    const cars = req.body;
+    const result = await carsCollection.insertOne(cars);
+    res.send(result);
   })
 
 
