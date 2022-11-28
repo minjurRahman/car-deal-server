@@ -13,7 +13,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-
 //Connect To Database
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.bjaguop.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -36,7 +35,6 @@ function verifyJWT(req, res, next){
 
 }
 
-
 //CRUD operation function
 async function run(){
   try{
@@ -58,7 +56,17 @@ async function run(){
       }
       next();
     }
+    //Verify Seller
+    const verifySeller = async (req, res, next) =>{
+      const decodedEmail = req.decoded.email;
+      const query = { email: decodedEmail };
+      const user = await usersCollection.findOne(query);
 
+      if(user?.role !== 'seller' ){
+        return res.status(403).send({message: 'Forbidden Access'})
+      }
+      next();
+    }
 
     //Category 
     app.get('/category', async(req, res) =>{
@@ -99,7 +107,6 @@ async function run(){
     res.send(result);
   })
 
-
     //Bookings collection 
     app.post('/bookings', async(req, res) =>{
       const booking = req.body;
@@ -121,7 +128,6 @@ async function run(){
       const booking = await bookingsCollection.findOne(query);
       res.send(booking);
     })
-
 
     //Users
     app.post('/users', async(req, res) =>{
@@ -150,6 +156,20 @@ async function run(){
 
     })
 
+    app.put('/users/seller/:id', verifyJWT, verifyAdmin, verifySeller, async(req, res) =>{
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          role: 'seller'
+        }
+      }
+      const result = await usersCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+
+    })
+
     app.get('/users/admin/:email', async(req, res) =>{
       const email = req.params.email;
       const query = { email: email }
@@ -170,7 +190,7 @@ async function run(){
       const sellers = await sellersCarCollection.find(query).toArray();
       res.send(sellers);
     })
-
+    
     app.delete('/sellersCar/:id', verifyJWT, verifyAdmin, async(req, res) =>{
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
@@ -185,7 +205,6 @@ async function run(){
       const sellerCar = await sellersCarCollection.findOne(query);
       res.send(sellerCar);
     })
-
 
     //Payment method/ Stripe
     app.post('/create-payment-intent', async(req, res) =>{
@@ -223,7 +242,6 @@ async function run(){
       res.send(result);
     })
 
-
     //JWT token
     app.get('/jwt', async(req, res) =>{
       const email = req.query.email;
@@ -236,8 +254,6 @@ async function run(){
       console.log(user);
       res.status(403).send({accessToken: ''});
     });
-
-
   }
   catch(error){
     console.log(error.name, error.message.bold, error.stack)
@@ -245,19 +261,13 @@ async function run(){
   finally{
 
   }
-
-
 }
 
 run()
 
-
-
 app.get('/', async(req, res) =>{
     res.send('Car Deal server is running');
 })
-
-
 
 app.listen(port, () => console.log(`Car Deal Server is running on ${port}`));
 
