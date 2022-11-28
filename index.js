@@ -25,10 +25,13 @@ function verifyJWT(req, res, next){
     return res.status(401).send('Unauthorized Access');
   }
   const token = authHeader.split(' ')[1];
+
   jwt.verify(token, process.env.ACCESS_TOKEN, function(err, decoded){
+    console.log(err, decoded, process.env.ACCESS_TOKEN)
     if(err){
       return res.status(403).send({message: 'Forbidden Access'})
     }
+
     req.decoded = decoded;
     next();
   })
@@ -62,7 +65,7 @@ async function run(){
       const query = { email: decodedEmail };
       const user = await usersCollection.findOne(query);
 
-      if(user?.role !== 'seller' ){
+      if(user?.status !== 'seller' ){
         return res.status(403).send({message: 'Forbidden Access'})
       }
       next();
@@ -156,18 +159,26 @@ async function run(){
 
     })
 
-    app.put('/users/seller/:id', verifyJWT, verifyAdmin, verifySeller, async(req, res) =>{
+    app.put('/users/seller/:id', verifyJWT, verifySeller, async(req, res) =>{
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const options = { upsert: true };
       const updateDoc = {
         $set: {
-          role: 'seller'
+          status: 'seller'
         }
       }
       const result = await usersCollection.updateOne(filter, updateDoc, options);
       res.send(result);
 
+    })
+
+    app.get('/users/sellers/:email', async(req, res) =>{
+      const email = req.params.email;
+      const query = { email: email }
+      const user = await usersCollection.findOne(query);
+      console.log(user)
+      res.send({isSeller: user?.status === 'seller'});
     })
 
     app.get('/users/admin/:email', async(req, res) =>{
@@ -178,20 +189,20 @@ async function run(){
     })
 
     //Sellers Car
-    app.post('/sellersCar', verifyJWT, verifyAdmin, async(req, res) =>{
+    app.post('/sellersCar', verifyJWT, verifySeller, async(req, res) =>{
       const cars = req.body;
       const result = await sellersCarCollection.insertOne(cars);
       res.send(result);
     })
 
-    app.get('/sellersCar', verifyJWT, verifyAdmin, async(req, res) =>{
+    app.get('/sellersCar', verifyJWT, verifySeller, async(req, res) =>{
       const email = req.query.email;
       const query = { email: email };
       const sellers = await sellersCarCollection.find(query).toArray();
       res.send(sellers);
     })
     
-    app.delete('/sellersCar/:id', verifyJWT, verifyAdmin, async(req, res) =>{
+    app.delete('/sellersCar/:id', verifyJWT, verifySeller, async(req, res) =>{
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const result = await sellersCarCollection.deleteOne(filter);
